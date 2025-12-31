@@ -14,6 +14,33 @@ kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || {
   exit 1
 }
 
+# Check if kubectl krew is installed
+if ! kubectl krew version >/dev/null 2>&1; then
+  echo "kubectl krew not found, installing..."
+  
+  # Install prerequisites
+  sudo apt update
+  sudo apt install -y git curl
+  
+  # Install krew
+  (
+    set -x; cd "$(mktemp -d)" &&
+    OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+    ARCH="$(uname -m | sed 's/x86_64/amd64/' | sed 's/arm.*$/arm/')" &&
+    curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew.tar.gz" &&
+    tar zxvf krew.tar.gz &&
+    KREW=./krew-"$OS"_"$ARCH" &&
+    "$KREW" install krew
+  )
+  export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+fi
+
+# Check if kubectl-neat is installed
+if ! kubectl neat --help >/dev/null 2>&1; then
+  echo "kubectl-neat not found, installing..."
+  kubectl krew install neat
+fi
+
 # Namespaced resources
 RESOURCES_NS=(
   deployments.apps
