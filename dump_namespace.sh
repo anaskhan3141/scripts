@@ -24,14 +24,16 @@ if ! kubectl krew version >/dev/null 2>&1; then
   
   # Install krew
   (
-    set -x; cd "$(mktemp -d)" &&
-    OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
-    ARCH="$(uname -m | sed 's/x86_64/amd64/' | sed 's/arm.*$/arm/')" &&
-    curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew.tar.gz" &&
-    tar zxvf krew.tar.gz &&
-    KREW=./krew-"$OS"_"$ARCH" &&
-    "$KREW" install krew
+    set -x
+    cd "$(mktemp -d)" || exit 1
+    OS="$(uname | tr '[:upper:]' '[:lower:]')"
+    ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/arm.*/arm/;s/aarch64/arm64/')"
+    KREW="krew-${OS}_${ARCH}"
+    curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz"
+    tar zxvf "${KREW}.tar.gz"
+    ./"${KREW}" install krew
   )
+
   export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 fi
 
