@@ -18,30 +18,22 @@ kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || {
 if ! kubectl krew version >/dev/null 2>&1; then
   echo "kubectl krew not found, installing..."
   
-  # Install prerequisites
   sudo apt update
   sudo apt install -y git curl
-  
-  # Install krew
-  (
-    set -x
-    cd "$(mktemp -d)" || exit 1
-    OS="$(uname | tr '[:upper:]' '[:lower:]')"
-    ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/arm.*/arm/;s/aarch64/arm64/')"
-    KREW="krew-${OS}_${ARCH}"
-    curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz"
-    tar zxvf "${KREW}.tar.gz"
-    ./"${KREW}" install krew
-  )
 
-  export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+  cd /tmp
+  curl -fsSLO https://github.com/kubernetes-sigs/krew/releases/latest/download/krew-linux_amd64.tar.gz
+  tar zxvf krew-linux_amd64.tar.gz
+  ./krew-linux_amd64 install krew
+  export PATH="${PATH}:${HOME}/.krew/bin"
+  echo 'export PATH="${PATH}:${HOME}/.krew/bin"' >> ~/.bashrc
 fi
 
 # Check if kubectl-neat is installed
 if ! kubectl neat --help >/dev/null 2>&1; then
-  echo "kubectl-neat not found, installing..."
   kubectl krew install neat
 fi
+
 
 # Namespaced resources
 RESOURCES_NS=(
